@@ -53,13 +53,17 @@ export default function LoginPage() {
 
             if (result?.error) {
                 setError(result.error);
-            } else {
-                router.push("/dashboard");
-                router.refresh();
+                setIsLoading(false);
+            } else if (result?.ok) {
+                // Tunggu sebentar agar session cookie tersimpan dengan sempurna
+                await new Promise((resolve) => setTimeout(resolve, 100));
+
+                // Gunakan window.location untuk full page reload 
+                // agar session terbaca dengan benar oleh middleware
+                window.location.href = "/dashboard";
             }
         } catch {
             setError("Terjadi kesalahan saat login");
-        } finally {
             setIsLoading(false);
         }
     };
