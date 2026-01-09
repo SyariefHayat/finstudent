@@ -1,13 +1,13 @@
 "use client"
 
-import { TrendingUp, TrendingDown, DollarSign, Wallet, PiggyBank } from "lucide-react"
+import * as React from "react"
+import { TrendingDown, DollarSign, Wallet, Loader2 } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 
 import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
@@ -18,27 +18,67 @@ import {
     ChartTooltipContent,
 } from "@/components/ui/chart"
 
-const chartData = [
-    { month: "January", desktop: 186, mobile: 80 },
-    { month: "February", desktop: 305, mobile: 200 },
-    { month: "March", desktop: 237, mobile: 120 },
-    { month: "April", desktop: 73, mobile: 190 },
-    { month: "May", desktop: 209, mobile: 130 },
-    { month: "June", desktop: 214, mobile: 140 },
-]
-
 const chartConfig = {
-    desktop: {
+    income: {
         label: "Pemasukan",
         color: "hsl(var(--chart-1))",
     },
-    mobile: {
+    expense: {
         label: "Pengeluaran",
         color: "hsl(var(--chart-2))",
     },
 } satisfies ChartConfig
 
+interface DashboardStats {
+    balance: number
+    totalIncome: number
+    totalExpense: number
+    topCategories: string[]
+    chartData: { month: string; income: number; expense: number }[]
+    expensesByCategory: Record<string, number>
+}
+
 export default function DashboardPage() {
+    const [stats, setStats] = React.useState<DashboardStats | null>(null)
+    const [isLoading, setIsLoading] = React.useState(true)
+
+    React.useEffect(() => {
+        fetchStats()
+    }, [])
+
+    async function fetchStats() {
+        try {
+            const res = await fetch("/api/dashboard/stats")
+            if (res.ok) {
+                const data = await res.json()
+                setStats(data)
+            }
+        } catch (error) {
+            console.error("Error fetching stats:", error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    function formatCurrency(amount: number) {
+        return new Intl.NumberFormat("id-ID").format(amount)
+    }
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-1 items-center justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        )
+    }
+
+    // Get top 4 expense categories for budget display
+    const budgetCategories = stats?.expensesByCategory
+        ? Object.entries(stats.expensesByCategory)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 4)
+        : []
+
     return (
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0 mt-4">
             <div className="grid gap-4 md:grid-cols-3">
@@ -50,9 +90,11 @@ export default function DashboardPage() {
                         <Wallet className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">Rp 2.500.000</div>
+                        <div className={`text-2xl font-bold ${(stats?.balance || 0) >= 0 ? '' : 'text-red-600'}`}>
+                            Rp {formatCurrency(stats?.balance || 0)}
+                        </div>
                         <p className="text-xs text-muted-foreground">
-                            +15% dari bulan lalu
+                            Pemasukan - Pengeluaran bulan ini
                         </p>
                     </CardContent>
                 </Card>
@@ -64,9 +106,11 @@ export default function DashboardPage() {
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-green-600">Rp 4.000.000</div>
+                        <div className="text-2xl font-bold text-green-600">
+                            Rp {formatCurrency(stats?.totalIncome || 0)}
+                        </div>
                         <p className="text-xs text-muted-foreground">
-                            Kiriman orang tua & Freelance
+                            {stats?.topCategories?.filter((_, i) => i < 2).join(" & ") || "Belum ada pemasukan"}
                         </p>
                     </CardContent>
                 </Card>
@@ -78,9 +122,11 @@ export default function DashboardPage() {
                         <TrendingDown className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-red-600">Rp 1.500.000</div>
+                        <div className="text-2xl font-bold text-red-600">
+                            Rp {formatCurrency(stats?.totalExpense || 0)}
+                        </div>
                         <p className="text-xs text-muted-foreground">
-                            Makan, Transport, Netflix
+                            {stats?.topCategories?.slice(0, 3).join(", ") || "Belum ada pengeluaran"}
                         </p>
                     </CardContent>
                 </Card>
@@ -95,7 +141,7 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <ChartContainer config={chartConfig}>
-                            <BarChart accessibilityLayer data={chartData}>
+                            <BarChart accessibilityLayer data={stats?.chartData || []}>
                                 <CartesianGrid vertical={false} />
                                 <XAxis
                                     dataKey="month"
@@ -108,49 +154,45 @@ export default function DashboardPage() {
                                     cursor={false}
                                     content={<ChartTooltipContent indicator="dashed" />}
                                 />
-                                <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
-                                <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+                                <Bar dataKey="income" fill="var(--color-income)" radius={4} />
+                                <Bar dataKey="expense" fill="var(--color-expense)" radius={4} />
                             </BarChart>
                         </ChartContainer>
                     </CardContent>
                 </Card>
                 <Card className="col-span-3">
                     <CardHeader>
-                        <CardTitle>Budget Status</CardTitle>
+                        <CardTitle>Pengeluaran per Kategori</CardTitle>
                         <CardDescription>
-                            Monitor penggunaan budget bulananmu.
+                            4 kategori pengeluaran terbesar bulan ini.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            <div className="flex items-center">
-                                <div className="ml-4 space-y-1">
-                                    <p className="text-sm font-medium leading-none">Makanan & Minuman</p>
-                                    <p className="text-sm text-muted-foreground">Rp 900.000 / Rp 1.500.000</p>
-                                </div>
-                                <div className="ml-auto font-medium text-yellow-600">60%</div>
-                            </div>
-                            <div className="flex items-center">
-                                <div className="ml-4 space-y-1">
-                                    <p className="text-sm font-medium leading-none">Transportasi</p>
-                                    <p className="text-sm text-muted-foreground">Rp 200.000 / Rp 500.000</p>
-                                </div>
-                                <div className="ml-auto font-medium text-green-600">40%</div>
-                            </div>
-                            <div className="flex items-center">
-                                <div className="ml-4 space-y-1">
-                                    <p className="text-sm font-medium leading-none">Hiburan</p>
-                                    <p className="text-sm text-muted-foreground">Rp 450.000 / Rp 500.000</p>
-                                </div>
-                                <div className="ml-auto font-medium text-red-600">90%</div>
-                            </div>
-                            <div className="flex items-center">
-                                <div className="ml-4 space-y-1">
-                                    <p className="text-sm font-medium leading-none">Pendidikan</p>
-                                    <p className="text-sm text-muted-foreground">Rp 100.000 / Rp 300.000</p>
-                                </div>
-                                <div className="ml-auto font-medium text-green-600">33%</div>
-                            </div>
+                            {budgetCategories.length === 0 ? (
+                                <p className="text-sm text-muted-foreground text-center py-4">
+                                    Belum ada data pengeluaran
+                                </p>
+                            ) : (
+                                budgetCategories.map(([category, amount]) => {
+                                    const percentage = stats?.totalExpense
+                                        ? Math.round((amount / stats.totalExpense) * 100)
+                                        : 0
+                                    return (
+                                        <div key={category} className="flex items-center">
+                                            <div className="ml-4 space-y-1 flex-1">
+                                                <p className="text-sm font-medium leading-none">{category}</p>
+                                                <p className="text-sm text-muted-foreground">
+                                                    Rp {formatCurrency(amount)}
+                                                </p>
+                                            </div>
+                                            <div className={`font-medium ${percentage >= 50 ? 'text-red-600' : percentage >= 30 ? 'text-yellow-600' : 'text-green-600'}`}>
+                                                {percentage}%
+                                            </div>
+                                        </div>
+                                    )
+                                })
+                            )}
                         </div>
                     </CardContent>
                 </Card>

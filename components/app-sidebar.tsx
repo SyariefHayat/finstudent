@@ -57,16 +57,6 @@ const data = {
             title: "Edukasi",
             url: "/dashboard/education",
             icon: BookOpen,
-            items: [
-                {
-                    title: "Artikel",
-                    url: "/dashboard/education/articles",
-                },
-                {
-                    title: "Video",
-                    url: "/dashboard/education/videos",
-                },
-            ],
         },
         {
             title: "Simulasi",
@@ -88,7 +78,7 @@ const data = {
     ],
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar> & { user: { name: string; email: string; avatar: string } }) {
     return (
         <Sidebar variant="inset" {...props}>
             <SidebarHeader>
@@ -114,7 +104,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
             </SidebarContent>
             <SidebarFooter>
-                <NavUser user={data.user} />
+                <NavUser user={props.user || data.user} />
             </SidebarFooter>
         </Sidebar>
     )
