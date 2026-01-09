@@ -38,19 +38,19 @@ export async function GET() {
 
         // Calculate totals
         const totalIncome = monthlyTransactions
-            .filter((t) => t.type === "income")
-            .reduce((sum, t) => sum + t.amount, 0);
+            .filter((t: any) => t.type === "income")
+            .reduce((sum: number, t: any) => sum + t.amount, 0);
 
         const totalExpense = monthlyTransactions
-            .filter((t) => t.type === "expense")
-            .reduce((sum, t) => sum + t.amount, 0);
+            .filter((t: any) => t.type === "expense")
+            .reduce((sum: number, t: any) => sum + t.amount, 0);
 
         const balance = totalIncome - totalExpense;
 
         // Get spending by category for current month
         const expensesByCategory = monthlyTransactions
-            .filter((t) => t.type === "expense")
-            .reduce((acc, t) => {
+            .filter((t: any) => t.type === "expense")
+            .reduce((acc: Record<string, number>, t: any) => {
                 const categoryName = t.category?.name || "Lainnya";
                 acc[categoryName] = (acc[categoryName] || 0) + t.amount;
                 return acc;
@@ -79,12 +79,12 @@ export async function GET() {
             });
 
             const monthIncome = monthTransactions
-                .filter((t) => t.type === "income")
-                .reduce((sum, t) => sum + t.amount, 0);
+                .filter((t: any) => t.type === "income")
+                .reduce((sum: number, t: any) => sum + t.amount, 0);
 
             const monthExpense = monthTransactions
-                .filter((t) => t.type === "expense")
-                .reduce((sum, t) => sum + t.amount, 0);
+                .filter((t: any) => t.type === "expense")
+                .reduce((sum: number, t: any) => sum + t.amount, 0);
 
             chartData.push({
                 month: monthDate.toLocaleString("id-ID", { month: "long" }),
