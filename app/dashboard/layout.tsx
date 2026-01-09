@@ -24,10 +24,10 @@ export default async function DashboardLayout({
 }) {
     const session = await getServerSession(authOptions)
 
-    // Redirect ke login jika tidak ada session
-    if (!session) {
-        redirect("/login")
-    }
+    // Proteksi route dinonaktifkan sementara untuk testing
+    // if (!session) {
+    //     redirect("/login")
+    // }
 
     const user = {
         name: session?.user?.name || "User",
