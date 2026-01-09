@@ -47,10 +47,13 @@ export async function GET() {
         });
 
         // Calculate spent per category
-        const spentByCategory = transactions.reduce((acc: Record<string, number>, t) => {
-            acc[t.categoryId] = (acc[t.categoryId] || 0) + t.amount;
-            return acc;
-        }, {});
+        const spentByCategory = transactions.reduce<Record<string, number>>(
+            (acc, t) => {
+                acc[t.categoryId] = (acc[t.categoryId] || 0) + t.amount;
+                return acc;
+            },
+            {}
+        );
 
         // Combine budget with spent data
         const budgetsWithSpent = budgets.map((budget) => ({
