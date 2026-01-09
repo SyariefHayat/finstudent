@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth"
+import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
 import { AppSidebar } from "@/components/app-sidebar"
 import {
@@ -22,6 +23,11 @@ export default async function DashboardLayout({
     children: React.ReactNode;
 }) {
     const session = await getServerSession(authOptions)
+
+    // Redirect ke login jika tidak ada session
+    if (!session) {
+        redirect("/login")
+    }
 
     const user = {
         name: session?.user?.name || "User",

@@ -45,6 +45,7 @@ export default function LoginPage() {
         setError(null);
 
         try {
+            // Step 1: Validasi credentials dulu tanpa redirect
             const result = await signIn("credentials", {
                 email: data.email,
                 password: data.password,
@@ -54,13 +55,13 @@ export default function LoginPage() {
             if (result?.error) {
                 setError(result.error);
                 setIsLoading(false);
-            } else if (result?.ok) {
-                // Tunggu sebentar agar session cookie tersimpan dengan sempurna
-                await new Promise((resolve) => setTimeout(resolve, 100));
+                return;
+            }
 
-                // Gunakan window.location untuk full page reload 
-                // agar session terbaca dengan benar oleh middleware
-                window.location.href = "/dashboard";
+            // Step 2: Jika berhasil, redirect dengan signIn lagi
+            // NextAuth akan handle session cookie dengan benar
+            if (result?.ok) {
+                window.location.replace("/dashboard");
             }
         } catch {
             setError("Terjadi kesalahan saat login");
