@@ -58,7 +58,7 @@ export async function GET() {
 
         // Get top expense categories
         const topCategories = Object.entries(expensesByCategory)
-            .sort(([, a], [, b]) => b - a)
+            .sort(([, a]: [string, number], [, b]: [string, number]) => b - a)
             .slice(0, 3)
             .map(([name]) => name);
 
