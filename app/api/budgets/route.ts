@@ -53,7 +53,7 @@ export async function GET() {
         }, {} as Record<string, number>);
 
         // Combine budget with spent data
-        const budgetsWithSpent = budgets.map((budget) => ({
+        const budgetsWithSpent = budgets.map((budget: any) => ({
             ...budget,
             spent: spentByCategory[budget.categoryId] || 0,
             percentage: Math.round(
